@@ -26,14 +26,7 @@ def calculate_hash(url):
     return h.hexdigest()
 
 
-def get_chrome_milestone():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--chrome_channel", default="Stable", help="Set the Chrome channel"
-    )
-    args = parser.parse_args()
-    channel = args.chrome_channel
-
+def get_chrome_milestone(channel: str):
     r = http.request(
         "GET",
         f"https://chromiumdash.appspot.com/fetch_releases?channel={channel}&num=1&platform=Mac,Linux",
@@ -55,7 +48,7 @@ def get_chrome_milestone():
     )[-1]
 
 
-def chromedriver(selected_version):
+def chromedriver(selected_version, name_prefix=""):
     content = ""
 
     drivers = selected_version["downloads"]["chromedriver"]
@@ -65,8 +58,8 @@ def chromedriver(selected_version):
 
     content = (
         content
-        + """    http_archive(
-        name = "linux_chromedriver",
+        + f"""    http_archive(
+        name = "linux_{name_prefix}chromedriver",
         url = "%s",
         sha256 = "%s",
         strip_prefix = "chromedriver-linux64",
@@ -90,9 +83,9 @@ js_library(
     sha = calculate_hash(mac)
     content = (
         content
-        + """
+        + f"""
     http_archive(
-        name = "mac_chromedriver",
+        name = "mac_{name_prefix}chromedriver",
         url = "%s",
         sha256 = "%s",
         strip_prefix = "chromedriver-mac-x64",
@@ -115,15 +108,15 @@ js_library(
     return content
 
 
-def chrome(selected_version):
+def chrome(selected_version, name_prefix=""):
     chrome_downloads = selected_version["downloads"]["chrome"]
 
     linux = [d["url"] for d in chrome_downloads if d["platform"] == "linux64"][0]
     sha = calculate_hash(linux)
 
-    content = """
+    content = f"""
     http_archive(
-        name = "linux_chrome",
+        name = "linux_{name_prefix}chrome",
         url = "%s",
         sha256 = "%s",
         build_file_content = \"\"\"
@@ -152,8 +145,8 @@ js_library(
     mac = [d["url"] for d in chrome_downloads if d["platform"] == "mac-x64"][0]
     sha = calculate_hash(mac)
 
-    content += """    http_archive(
-        name = "mac_chrome",
+    content += f"""    http_archive(
+        name = "mac_{name_prefix}chrome",
         url = "%s",
         sha256 = "%s",
         strip_prefix = "chrome-mac-x64",
@@ -523,9 +516,23 @@ def pin_browsers():
     content = content + geckodriver()
     content = content + edge()
     content = content + edgedriver()
-    chrome_milestone = get_chrome_milestone()
-    content = content + chrome(chrome_milestone)
-    content = content + chromedriver(chrome_milestone)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--chrome_channel", default="Stable", help="Set the Chrome channel"
+    )
+    args = parser.parse_args()
+    channel_to_fetch = args.chrome_channel
+
+    chrome_milestone_obj = get_chrome_milestone(channel_to_fetch)
+    content = content + chrome(chrome_milestone_obj) # Stable uses default prefix ""
+    content = content + chromedriver(chrome_milestone_obj) # Stable uses default prefix ""
+
+    # Add Beta Chrome and Chromedriver
+    print("Fetching Chrome Beta milestone...", file=sys.stderr)
+    chrome_beta_milestone_obj = get_chrome_milestone(channel="Beta")
+    content = content + chrome(chrome_beta_milestone_obj, name_prefix="beta_")
+    content = content + chromedriver(chrome_beta_milestone_obj, name_prefix="beta_")
     content += """
 def _pin_browsers_extension_impl(_ctx):
     pin_browsers()

@@ -123,10 +123,10 @@ js_library(
 
     pkg_archive(
         name = "mac_edge",
-        url = "https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/8b523c53-9ba6-4310-b0d3-9391eaf174f7/MicrosoftEdge-136.0.3240.76.pkg",
-        sha256 = "6843377514a8ab215423998e039dcf95ec240300ed12e19f2244fd7bf77a68f1",
+        url = "https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/0db7b32d-8b37-45ad-b2d9-b6b6cfcf91bd/MicrosoftEdge-136.0.3240.92.pkg",
+        sha256 = "c3407b12244a854928d5731c5c52be41905ab7f7689a50503929ed21c1fe15e2",
         move = {
-            "MicrosoftEdge-136.0.3240.76.pkg/Payload/Microsoft Edge.app": "Edge.app",
+            "MicrosoftEdge-136.0.3240.92.pkg/Payload/Microsoft Edge.app": "Edge.app",
         },
         build_file_content = """
 load("@aspect_rules_js//js:defs.bzl", "js_library")
@@ -143,8 +143,8 @@ js_library(
 
     deb_archive(
         name = "linux_edge",
-        url = "https://packages.microsoft.com/repos/edge/pool/main/m/microsoft-edge-stable/microsoft-edge-stable_136.0.3240.76-1_amd64.deb",
-        sha256 = "6e234cd5ec49ff151c9a16631fb65c145f5c615aac3dabdb6edb099d1565c85a",
+        url = "https://packages.microsoft.com/repos/edge/pool/main/m/microsoft-edge-stable/microsoft-edge-stable_136.0.3240.92-1_amd64.deb",
+        sha256 = "04b4287e74be559c365f36beb38fa8233de24ed8c8a17d95d9ce83547951d8c3",
         build_file_content = """
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 package(default_visibility = ["//visibility:public"])
@@ -199,6 +199,86 @@ js_library(
 
     http_archive(
         name = "linux_chrome",
+        url = "https://storage.googleapis.com/chrome-for-testing-public/136.0.7103.113/linux64/chrome-linux64.zip",
+        sha256 = "a9ec3b5f654745360095f4e066b6b78442e56fe4124831051449813e5c4e0f95",
+        build_file_content = """
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "files",
+    srcs = glob(["**/*"]),
+)
+
+exports_files(["chrome-linux64/chrome"])
+
+js_library(
+    name = "chrome-js",
+    data = [":files"],
+)
+""",
+    )
+
+    http_archive(
+        name = "mac_chrome",
+        url = "https://storage.googleapis.com/chrome-for-testing-public/136.0.7103.113/mac-x64/chrome-mac-x64.zip",
+        sha256 = "4c7f9dc303fb16e028ed5430406ec2ff10664da15fedc5757c5672fbea58dd22",
+        strip_prefix = "chrome-mac-x64",
+        patch_cmds = [
+            "mv 'Google Chrome for Testing.app' Chrome.app",
+            "mv 'Chrome.app/Contents/MacOS/Google Chrome for Testing' Chrome.app/Contents/MacOS/Chrome",
+        ],
+        build_file_content = """
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["Chrome.app"])
+
+js_library(
+    name = "chrome-js",
+    data = glob(["Chrome.app/**/*"]),
+)
+""",
+    )
+
+    http_archive(
+        name = "linux_chromedriver",
+        url = "https://storage.googleapis.com/chrome-for-testing-public/136.0.7103.113/linux64/chromedriver-linux64.zip",
+        sha256 = "121e7af496671aec492ac910d192446c3038d565f8be93e1eaaef7b113f4ce8c",
+        strip_prefix = "chromedriver-linux64",
+        build_file_content = """
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["chromedriver"])
+
+js_library(
+    name = "chromedriver-js",
+    data = ["chromedriver"],
+)
+""",
+    )
+
+    http_archive(
+        name = "mac_chromedriver",
+        url = "https://storage.googleapis.com/chrome-for-testing-public/136.0.7103.113/mac-x64/chromedriver-mac-x64.zip",
+        sha256 = "171e8df024bb23c9078d971d5f6302a7946b1f53400368b934b1ba1de0074eaa",
+        strip_prefix = "chromedriver-mac-x64",
+        build_file_content = """
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["chromedriver"])
+
+js_library(
+    name = "chromedriver-js",
+    data = ["chromedriver"],
+)
+""",
+    )
+
+    http_archive(
+        name = "linux_beta_chrome",
         url = "https://storage.googleapis.com/chrome-for-testing-public/137.0.7151.40/linux64/chrome-linux64.zip",
         sha256 = "1a17f1d70a085188eb78365b90b435d83350fcec1040a9383eea80ed97963204",
         build_file_content = """
@@ -218,8 +298,9 @@ js_library(
 )
 """,
     )
+
     http_archive(
-        name = "mac_chrome",
+        name = "mac_beta_chrome",
         url = "https://storage.googleapis.com/chrome-for-testing-public/137.0.7151.40/mac-x64/chrome-mac-x64.zip",
         sha256 = "65fb0ae59177d2196eb62fdeb88c455f8965af2e0e9ee6640d66765c7df75450",
         strip_prefix = "chrome-mac-x64",
@@ -239,8 +320,9 @@ js_library(
 )
 """,
     )
+
     http_archive(
-        name = "linux_chromedriver",
+        name = "linux_beta_chromedriver",
         url = "https://storage.googleapis.com/chrome-for-testing-public/137.0.7151.40/linux64/chromedriver-linux64.zip",
         sha256 = "09246c6eaa804a39b8c54467bf4d62233577f67a9df11a33d8b27dd1b30a168c",
         strip_prefix = "chromedriver-linux64",
@@ -258,87 +340,9 @@ js_library(
     )
 
     http_archive(
-        name = "mac_chromedriver",
+        name = "mac_beta_chromedriver",
         url = "https://storage.googleapis.com/chrome-for-testing-public/137.0.7151.40/mac-x64/chromedriver-mac-x64.zip",
         sha256 = "c3c7cd781b217694ce35b9b7e2f3c3d214982a023a0c1a21dae4af320e409928",
-        strip_prefix = "chromedriver-mac-x64",
-        build_file_content = """
-load("@aspect_rules_js//js:defs.bzl", "js_library")
-package(default_visibility = ["//visibility:public"])
-
-exports_files(["chromedriver"])
-
-js_library(
-    name = "chromedriver-js",
-    data = ["chromedriver"],
-)
-""",
-    )
-
-    http_archive(
-        name = "linux_beta_chrome",
-        url = "https://storage.googleapis.com/chrome-for-testing-public/137.0.7151.6/linux64/chrome-linux64.zip",
-        sha256 = "1c304daed9edf8d4b5b57645e6cccf227bcc7664595b369879f89ca34d2509ac",
-        build_file_content = """
-load("@aspect_rules_js//js:defs.bzl", "js_library")
-package(default_visibility = ["//visibility:public"])
-
-filegroup(
-    name = "files",
-    srcs = glob(["**/*"]),
-)
-
-exports_files(["chrome-linux64/chrome"])
-
-js_library(
-    name = "chrome-js",
-    data = [":files"],
-)
-""",
-    )
-    http_archive(
-        name = "mac_beta_chrome",
-        url = "https://storage.googleapis.com/chrome-for-testing-public/137.0.7151.6/mac-x64/chrome-mac-x64.zip",
-        sha256 = "c6f3a04ea911682abcce470310433efb75ef4063ba9f02df0a22df89344947cb",
-        strip_prefix = "chrome-mac-x64",
-        patch_cmds = [
-            "mv 'Google Chrome for Testing.app' Chrome.app",
-            "mv 'Chrome.app/Contents/MacOS/Google Chrome for Testing' Chrome.app/Contents/MacOS/Chrome",
-        ],
-        build_file_content = """
-load("@aspect_rules_js//js:defs.bzl", "js_library")
-package(default_visibility = ["//visibility:public"])
-
-exports_files(["Chrome.app"])
-
-js_library(
-    name = "chrome-js",
-    data = glob(["Chrome.app/**/*"]),
-)
-""",
-    )
-    http_archive(
-        name = "linux_beta_chromedriver",
-        url = "https://storage.googleapis.com/chrome-for-testing-public/137.0.7151.6/linux64/chromedriver-linux64.zip",
-        sha256 = "0d5ba6533e60b44b39f41b4313696b41bb7b466f29aa00cb82df030392559854",
-        strip_prefix = "chromedriver-linux64",
-        build_file_content = """
-load("@aspect_rules_js//js:defs.bzl", "js_library")
-package(default_visibility = ["//visibility:public"])
-
-exports_files(["chromedriver"])
-
-js_library(
-    name = "chromedriver-js",
-    data = ["chromedriver"],
-)
-""",
-    )
-
-    http_archive(
-        name = "mac_beta_chromedriver",
-        url = "https://storage.googleapis.com/chrome-for-testing-public/137.0.7151.6/mac-x64/chromedriver-mac-x64.zip",
-        sha256 = "d01e48e534b48ab1f6401642720eec95773b069ad8a3042969d1fd708a4fb6c2",
         strip_prefix = "chromedriver-mac-x64",
         build_file_content = """
 load("@aspect_rules_js//js:defs.bzl", "js_library")
